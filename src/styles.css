@@ -348,6 +348,13 @@ button {
     rgba(255, 255, 255, 0.02);
 }
 
+.dropzone-error {
+  border-color: rgba(210, 88, 63, 0.44);
+  background:
+    linear-gradient(180deg, rgba(158, 63, 49, 0.18), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
 .dropzone-tag {
   width: fit-content;
   padding: 6px 12px;
@@ -356,6 +363,22 @@ button {
   color: var(--gold-strong);
   font-size: 12px;
   letter-spacing: 0.08em;
+}
+
+.dropzone-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.dropzone-file {
+  color: var(--gold-strong);
+}
+
+.file-input {
+  display: none;
 }
 
 .queue-list,
@@ -461,6 +484,26 @@ button {
   border-radius: 22px;
 }
 
+.table-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.table-status-valid {
+  color: #cbdfb2;
+  border-color: rgba(151, 193, 109, 0.24);
+  background: rgba(86, 127, 68, 0.18);
+}
+
+.table-status-invalid {
+  color: #ffd4c3;
+  border-color: rgba(210, 88, 63, 0.28);
+  background: rgba(158, 63, 49, 0.24);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -487,6 +530,22 @@ tbody tr:nth-child(even) {
 
 .detail-card {
   padding: 22px;
+}
+
+.detail-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 18px 0 0;
+  list-style: none;
+}
+
+.detail-list li {
+  padding: 12px 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
 }
 
 .detail-placeholder {
@@ -553,6 +612,10 @@ tbody tr:nth-child(even) {
   .stage-row,
   .hero-metrics li {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dropzone-actions {
     align-items: flex-start;
   }
 }
