@@ -1,0 +1,271 @@
+{
+  "schema_version": "4.0.0",
+  "version": 1,
+  "task_id": "T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend",
+  "title": "tobacco-monotonicity-frontend",
+  "goal": "构建一个中国烟草主题的数据前端，支持导入 Excel 数据，检查第三十档到第一档是否满足单调不增，并将不满足的记录高亮标记出来",
+  "lane": "planned_build",
+  "workflow_state": "EXECUTING",
+  "created_at": "2026-03-30T12:26:17.013Z",
+  "updated_at": "2026-03-30T12:26:17.022Z",
+  "spec_revision": 1,
+  "plan_revision": 1,
+  "current_spec_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/specs/spec.v1.md",
+  "current_plan_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/plans/plan.v1.md",
+  "git": {
+    "workspace_mode": "repo",
+    "base_branch": "master",
+    "base_commit": null,
+    "working_branch": "master",
+    "preexisting_dirty_files": [
+      ".codex/",
+      "AGENTS.md",
+      "project-map.md",
+      "\"/346/225/260/346/215/256/346/234/215/345/212/241_20260329135909181.xlsx\""
+    ]
+  },
+  "tdd": {
+    "phase": "NOT_REQUIRED",
+    "target_test": null,
+    "evidence_file": null,
+    "note": "B1 focuses on project scaffold and page shell; build verification is sufficient for this batch.",
+    "target_behavior": null,
+    "failure_mode": null,
+    "test_level": null,
+    "regression_target": null
+  },
+  "execution": {
+    "stage": "verified",
+    "current_batch_id": "B1",
+    "review_required": true,
+    "review_status": "passed",
+    "last_result_commit": null
+  },
+  "current_contract": {
+    "summary": "B1: initialize the frontend project and establish the single-page premium workbench shell without implementing real Excel parsing.",
+    "allowed_paths": [
+      "package.json",
+      "package-lock.json",
+      "tsconfig*.json",
+      "vite.config.*",
+      "index.html",
+      "src/**",
+      "public/**",
+      ".gitignore"
+    ],
+    "acceptance_checks": [
+      "npm install",
+      "npm run build"
+    ],
+    "done_when": [
+      "前端项目可构建。",
+      "页面具备高质感工作台骨架，能承接后续真实数据。",
+      "核心组件与类型边界清晰，无后端依赖。"
+    ],
+    "risk_notes": [
+      "避免把 B2 的 Excel 解析工作提前塞进本 batch。",
+      "避免先做成通用后台模板导致后续大改。",
+      "视觉表达要有主题方向，但不能在此 batch 过度消耗时间。"
+    ],
+    "tdd_required": false,
+    "delegate_policy": "不允许实现型子代理"
+  },
+  "requirements": {
+    "open_questions": [],
+    "confirmed_decisions": [
+      "v1 以 Excel 导入后执行三十档到一档的单调不增校验为核心流程。",
+      "v1 默认按当前样例文件的列结构解析单表数据。",
+      "视觉主题采用中国烟草行业语义化设计，不直接冒用官方注册标识。",
+      "首版产品边界确定为单页高质感数据工作台。"
+    ],
+    "unresolved_assumptions": [
+      "假设首版无需后端和用户权限系统。",
+      "假设用户接受只支持当前模板或近似模板的 Excel 导入。"
+    ]
+  },
+  "spec": {
+    "status": "approved",
+    "approved_at": "2026-03-30T20:35:02+08:00",
+    "depth": "deep"
+  },
+  "plan": {
+    "approved_at": "2026-03-30T20:40:00+08:00",
+    "current_batch_id": "B1",
+    "batches": [
+      {
+        "id": "B1",
+        "title": "frontend-shell-and-workbench-frame",
+        "goal": "初始化前端工程，建立单页工作台骨架、主题变量、基础布局和本地示例数据流占位。",
+        "allowed_paths": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig*.json",
+          "vite.config.*",
+          "index.html",
+          "src/**",
+          "public/**",
+          ".gitignore"
+        ],
+        "acceptance_checks": [
+          "npm install",
+          "npm run build"
+        ],
+        "done_when": [
+          "前端项目可构建。",
+          "页面具备高质感工作台骨架，能承接后续真实数据。",
+          "核心组件与类型边界清晰，无后端依赖。"
+        ],
+        "risk_notes": [
+          "避免先做成通用后台模板导致后续大改。",
+          "视觉表达要有主题方向，但不能在此 batch 过度消耗时间。"
+        ],
+        "tdd_required": false,
+        "implementation_delegate_allowed": false,
+        "status": "active"
+      },
+      {
+        "id": "B2",
+        "title": "excel-parse-and-monotonic-analysis",
+        "goal": "接入本地 Excel 导入、单 sheet 解析、列识别、数值归一化和单调不增校验逻辑。",
+        "allowed_paths": [
+          "src/**",
+          "package.json",
+          "package-lock.json",
+          "vitest.config.*",
+          "tests/**"
+        ],
+        "acceptance_checks": [
+          "npm run build",
+          "npm test",
+          "使用真实样例 Excel 成功解析",
+          "使用 synthetic failing case 成功产出至少一条违规记录"
+        ],
+        "done_when": [
+          "能导入当前样例文件并输出分析结果。",
+          "能识别三十档到一档的顺序关系。",
+          "每行都能给出 isValid、violations、rankValues 等结构化结果。",
+          "对空值按 0 处理的规则已被明确实现并验证。"
+        ],
+        "risk_notes": [
+          "这是最高风险 batch，必须额外小心，优先保证模板识别、数值清洗和违规对定位的正确性。",
+          "当前样例无违规，不能只拿真实样例通过就算完成，必须以 synthetic failing case 证明高亮链路可被触发。",
+          "分析逻辑与 UI 展示必须保持单一数据源，避免后续 B3 重写规则。"
+        ],
+        "tdd_required": true,
+        "implementation_delegate_allowed": false,
+        "status": "pending"
+      },
+      {
+        "id": "B3",
+        "title": "results-table-filter-and-violation-detail",
+        "goal": "把分析结果完整接到页面上，完成表格展示、违规高亮、筛选模式和详情查看。",
+        "allowed_paths": [
+          "src/**",
+          "public/**"
+        ],
+        "acceptance_checks": [
+          "npm run build",
+          "手动验证导入后可筛选违规项并查看具体违规档位对"
+        ],
+        "done_when": [
+          "用户能完成导入、查看汇总、定位违规、查看详情的主流程。",
+          "违规行高亮与详情信息一致。",
+          "样例与 synthetic failing case 都能在界面中正确展示。"
+        ],
+        "risk_notes": [
+          "表格可读性和高亮密度要平衡。",
+          "详情区不能另起一套判断逻辑，必须复用 B2 的分析结果。"
+        ],
+        "tdd_required": false,
+        "implementation_delegate_allowed": true,
+        "status": "pending"
+      },
+      {
+        "id": "B4",
+        "title": "premium-visual-polish-and-release-verification",
+        "goal": "完成高保真视觉、轻量图表表达、演示素材与最终验收，达到 spec 中的产品完成度。",
+        "allowed_paths": [
+          "src/**",
+          "public/**",
+          "README.md",
+          ".codex/state/tasks/**"
+        ],
+        "acceptance_checks": [
+          "npm run build",
+          "全流程手测",
+          "synthetic failing case 可复现违规高亮",
+          "review 与 verification 产物齐全"
+        ],
+        "done_when": [
+          "页面在桌面端具备明确的烟草行业主题视觉。",
+          "核心主流程稳定可演示。",
+          "synthetic failing case 能直接证明违规检测与高亮效果。",
+          "满足 spec.v1 的 Done When。"
+        ],
+        "risk_notes": [
+          "视觉打磨不能盖过信息层次和业务主流程。",
+          "图表必须服务分析，不做喧宾夺主的装饰。"
+        ],
+        "tdd_required": false,
+        "implementation_delegate_allowed": true,
+        "status": "pending"
+      }
+    ]
+  },
+  "review": {
+    "phase": "passed",
+    "report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/review/review.v1.md",
+    "last_failed_summary": null
+  },
+  "verification": {
+    "phase": "PASSED",
+    "checks_run": [
+      "build:passed",
+      "types:passed",
+      "lint:not_applicable",
+      "tests:not_applicable",
+      "security:not_applicable",
+      "diff_review:passed"
+    ],
+    "evidence_file": null,
+    "report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/verify/verification.v1.md",
+    "last_failed_at": null,
+    "last_failed_summary": null
+  },
+  "investigation": {
+    "phase": "inactive",
+    "evidence_file": null,
+    "note": null,
+    "root_cause": null
+  },
+  "debug": {
+    "phase": "INACTIVE",
+    "evidence_file": null,
+    "note": null,
+    "root_cause": null
+  },
+  "replan": {
+    "requested": false,
+    "last_reason": null,
+    "history": []
+  },
+  "resume": {
+    "last_checkpoint_summary": "B1 verification passed. The active batch has review evidence, complete acceptance coverage for npm install and npm run build, and a passed verification report. The frontend scaffold and premium single-page shell are now eligible for cleanup and checkpointing before closing B1. Next recommended skill is $cleanup-light-zh.",
+    "next_recommended_skill": "$cleanup-light-zh"
+  },
+  "entropy": {
+    "cleanup_required": false,
+    "last_mode": null,
+    "last_cleaned_at": null
+  },
+  "planning": {
+    "phase": "plan_approved"
+  },
+  "current_milestone_id": "B1",
+  "milestone_status": {
+    "B1": "active",
+    "B2": "pending",
+    "B3": "pending",
+    "B4": "pending"
+  }
+}
