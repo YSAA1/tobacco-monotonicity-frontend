@@ -1,0 +1,14 @@
+{
+  "version": "0.1",
+  "generated_at": "2026-03-30T20:20:00+08:00",
+  "project_name": "kedou",
+  "language_hints": [],
+  "project_type_guess": "data-workspace",
+  "summary": "Initial bootstrap inference only. Current repository contains a single Excel file and no code or build metadata yet.",
+  "entrypoints": [],
+  "common_commands": [],
+  "notes": [
+    "This profile is provisional and should be updated after code or docs are added.",
+    "No Python, JavaScript, or build-system files were detected during bootstrap."
+  ]
+}

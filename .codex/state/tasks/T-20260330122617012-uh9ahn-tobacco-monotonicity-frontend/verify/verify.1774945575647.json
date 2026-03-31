@@ -1,0 +1,32 @@
+{
+  "at": "2026-03-31T08:26:15.647Z",
+  "phase": "PASSED",
+  "checks_run": [
+    "npm run build",
+    "全流程手测",
+    "synthetic failing case 可复现违规高亮",
+    "review 与 verification 产物齐全",
+    "npm test",
+    "npm audit --omit=dev --json"
+  ],
+  "summary": "B4 verification passed. Build/test/security checks are green, and release acceptance flow is satisfied: the synthetic failing case reproduces highlighted violations, filters and detail linkage stay consistent, and release artifacts are complete.",
+  "needs_replan": false,
+  "milestone_id": "B4",
+  "batch_id": "B4",
+  "report": {
+    "build": "passed",
+    "types": "passed_via_npm_run_build",
+    "lint": "not_applicable_no_lint_script",
+    "tests": "passed",
+    "security": {
+      "status": "passed",
+      "command": "npm audit --omit=dev --json",
+      "advisory_count": 0
+    },
+    "diff_review": "passed:.codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/review/review.1774945560500.json",
+    "acceptance_coverage": "complete_for_contract_checks",
+    "manual_validation": "passed_full_flow_and_synthetic_case_reproducibility",
+    "summary": "B4 release polish batch satisfies visual quality and end-to-end demo readiness while preserving the single analysis data source.",
+    "verdict": "PASSED"
+  }
+}
