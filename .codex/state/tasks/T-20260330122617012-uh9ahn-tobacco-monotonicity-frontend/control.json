@@ -1,13 +1,13 @@
 {
   "schema_version": "4.0.0",
-  "version": 26,
+  "version": 27,
   "task_id": "T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend",
   "title": "tobacco-monotonicity-frontend",
   "goal": "构建一个中国烟草主题的数据前端，支持导入 Excel 数据，检查第三十档到第一档是否满足单调不增，并将不满足的记录高亮标记出来",
   "lane": "planned_build",
-  "workflow_state": "VERIFYING",
+  "workflow_state": "DONE",
   "created_at": "2026-03-30T12:26:17.013Z",
-  "updated_at": "2026-03-31T08:26:15.648Z",
+  "updated_at": "2026-03-31T08:26:40.877Z",
   "spec_revision": 1,
   "plan_revision": 1,
   "current_spec_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/specs/spec.v1.md",
@@ -35,26 +35,16 @@
     "regression_target": "premium visual polish and release verification"
   },
   "execution": {
-    "stage": "batch_checkpoint",
-    "current_batch_id": "B4",
+    "stage": "idle",
+    "current_batch_id": null,
     "review_required": true,
     "review_status": "passed",
-    "last_result_commit": "6a155e0"
+    "last_result_commit": "9672810"
   },
   "current_contract": {
     "summary": "premium-visual-polish-and-release-verification",
-    "allowed_paths": [
-      "src/**",
-      "public/**",
-      "README.md",
-      ".codex/state/tasks/**"
-    ],
-    "acceptance_checks": [
-      "npm run build",
-      "全流程手测",
-      "synthetic failing case 可复现违规高亮",
-      "review 与 verification 产物齐全"
-    ],
+    "allowed_paths": [],
+    "acceptance_checks": [],
     "tdd_required": false
   },
   "requirements": {
@@ -77,7 +67,7 @@
   },
   "plan": {
     "approved_at": "2026-03-30T20:40:00+08:00",
-    "current_batch_id": "B4",
+    "current_batch_id": null,
     "batches": [
       {
         "id": "B1",
@@ -183,7 +173,7 @@
         "id": "B4",
         "title": "premium-visual-polish-and-release-verification",
         "goal": "完成高保真视觉、轻量图表表达、演示素材与最终验收，达到 spec 中的产品完成度。",
-        "status": "active",
+        "status": "done",
         "allowed_paths": [
           "src/**",
           "public/**",
@@ -209,7 +199,7 @@
         ],
         "tdd_required": false,
         "batch_start_commit": "6a155e07b8f2118f73c6b7f3bd11844ca92d91ba",
-        "result_commit": null,
+        "result_commit": "9672810",
         "review_report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/review/review.1774945560500.json",
         "verification_report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/verify/verify.1774945575647.json"
       }
@@ -253,22 +243,22 @@
     "history": []
   },
   "resume": {
-    "last_checkpoint_summary": "B3 closed with result commit 6a155e0. The frontend now wires B2 analysis rows into interactive filtering (all/invalid/valid), violation row highlighting, clickable row selection, and synchronized detail rendering. It also provides a synthetic failing case loader for UI regression/demo while keeping the same single analysis data source.",
-    "next_recommended_skill": "$cleanup-light-zh"
+    "last_checkpoint_summary": "B4 closed with result commit 9672810. The frontend now reaches release-ready polish: refined premium visuals, lightweight insight metrics and violation hotspots, clearer B4 narrative copy, and a README-based demo checklist. Build, tests, security, and full manual flow validation all passed without changing the single analysis data source.",
+    "next_recommended_skill": null
   },
   "entropy": {
-    "cleanup_required": true,
+    "cleanup_required": false,
     "last_mode": "light",
-    "last_cleaned_at": "2026-03-31T08:20:05.819Z"
+    "last_cleaned_at": "2026-03-31T08:26:40.876Z"
   },
   "planning": {
     "phase": "plan_approved"
   },
-  "current_milestone_id": "B4",
+  "current_milestone_id": null,
   "milestone_status": {
     "B1": "done",
     "B2": "done",
     "B3": "done",
-    "B4": "active"
+    "B4": "done"
   }
 }
