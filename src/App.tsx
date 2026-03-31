@@ -28,6 +28,13 @@ type QueueItem = {
 
 type FilterMode = 'all' | 'invalid' | 'valid'
 
+type InsightMetric = {
+  label: string
+  value: number
+  max: number
+  tone: 'gold' | 'red' | 'green'
+}
+
 const previewColumns = ['商品编码', '商品名称', '批发价', '状态', '违规对', '三十档', '一档']
 
 const heroGlowStyle: CSSProperties = {
@@ -58,6 +65,22 @@ function describeViolations(row: TobaccoAnalysisRow): string {
 
 function rowKey(row: TobaccoAnalysisRow): string {
   return `${row.productCode}-${row.rowNumber}`
+}
+
+function buildRankHotspots(rows: TobaccoAnalysisRow[]): Array<{ rankPair: string; count: number }> {
+  const counter = new Map<string, number>()
+
+  for (const row of rows) {
+    for (const violation of row.violations) {
+      const pair = `${violation.higherRank} → ${violation.lowerRank}`
+      counter.set(pair, (counter.get(pair) ?? 0) + 1)
+    }
+  }
+
+  return [...counter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([rankPair, count]) => ({ rankPair, count }))
 }
 
 function buildSyntheticFailingAnalysis(): TobaccoWorkbookAnalysis {
@@ -121,6 +144,30 @@ function App() {
     }
     return true
   })
+  const maxPairsPerRow = allRows.reduce((max, row) => Math.max(max, row.violations.length), 0)
+  const rankHotspots = buildRankHotspots(allRows)
+  const insightMetrics: InsightMetric[] = analysis
+    ? [
+        {
+          label: '通过率',
+          value: analysis.summary.validRowCount,
+          max: Math.max(analysis.summary.totalRows, 1),
+          tone: 'green',
+        },
+        {
+          label: '违规行',
+          value: analysis.summary.invalidRowCount,
+          max: Math.max(analysis.summary.totalRows, 1),
+          tone: 'red',
+        },
+        {
+          label: '违规对',
+          value: analysis.summary.invalidPairCount,
+          max: Math.max(maxPairsPerRow * Math.max(analysis.summary.totalRows, 1), 1),
+          tone: 'gold',
+        },
+      ]
+    : []
 
   useEffect(() => {
     if (filteredRows.length === 0) {
@@ -286,8 +333,8 @@ function App() {
           </div>
           <h1>档位单调性分析中枢</h1>
           <p className="hero-lead">
-            当前批次 B3：在 B2 已验证的数据结构上，完成违规筛选、行高亮和详情联动。导入真实模板后可直接定位违规记录，
-            也可一键加载 synthetic failing case 做演示回归。
+            当前批次 B4：进入发布前收口，强化视觉层次与演示表达。分析链路继续复用 B2/B3 的单一数据源，
+            支持实时筛选、高亮联动和 synthetic failing case 复现。
           </p>
           <div className="hero-actions">
             <button type="button" className="primary-button" onClick={openFilePicker}>
@@ -325,7 +372,7 @@ function App() {
             </li>
             <li>
               <span>当前批次</span>
-              <strong>B3 结果交互</strong>
+              <strong>B4 发布收口</strong>
             </li>
           </ul>
         </aside>
@@ -338,7 +385,7 @@ function App() {
               <span className="eyebrow">Summary</span>
               <h2>检测摘要区</h2>
             </div>
-            <p>摘要卡直接绑定当前分析结果，后续 B3 复用同一数据源做筛选与联动。</p>
+            <p>摘要卡与洞察条形图共同作为演示总览，所有值均来自同一分析结果对象。</p>
           </div>
           <div className="summary-grid">
             {summaryCards.map((card) => (
@@ -349,6 +396,58 @@ function App() {
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="panel insight-panel">
+          <div className="panel-heading">
+            <div>
+              <span className="eyebrow">Insight</span>
+              <h2>违规热区与质量刻度</h2>
+            </div>
+            <p>轻量图表只表达关键结论，不替代明细表与规则说明。</p>
+          </div>
+          {analysis ? (
+            <div className="insight-layout">
+              <div className="insight-metric-list">
+                {insightMetrics.map((metric) => {
+                  const percent = Math.round((metric.value / metric.max) * 100)
+                  return (
+                    <article key={metric.label} className="insight-metric">
+                      <div className="insight-head">
+                        <strong>{metric.label}</strong>
+                        <span>
+                          {metric.value} / {metric.max}
+                        </span>
+                      </div>
+                      <div className="insight-track">
+                        <span
+                          className={`insight-fill insight-fill-${metric.tone}`}
+                          style={{ width: `${Math.min(percent, 100)}%` }}
+                        />
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+              <div className="hotspot-list">
+                <h3>高频违规档位对</h3>
+                {rankHotspots.length > 0 ? (
+                  <ul>
+                    {rankHotspots.map((item) => (
+                      <li key={item.rankPair}>
+                        <span>{item.rankPair}</span>
+                        <strong>{item.count} 次</strong>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>当前文件暂无违规档位对，整体单调性通过。</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="insight-placeholder">上传文件后展示违规热区与质量刻度。</p>
+          )}
         </section>
 
         <section className="panel upload-panel">
@@ -429,7 +528,7 @@ function App() {
               <span className="eyebrow">Pipeline</span>
               <h2>执行进度区</h2>
             </div>
-            <p>当前显示 B3 执行态：在不改规则引擎的前提下，完成结果筛选与交互联动闭环。</p>
+            <p>当前显示 B4 发布态：保持规则引擎不变，补足演示完整度与视觉一致性。</p>
           </div>
           <div className="stage-list">
             {stageRows.map((row) => (
@@ -450,7 +549,7 @@ function App() {
               <span className="eyebrow">Result Table</span>
               <h2>结构化结果预览</h2>
             </div>
-            <p>结果表支持按状态筛选、违规行高亮与选中联动，数据来源保持为 B2 的分析结构。</p>
+            <p>结果表用于定位具体记录，和上方刻度图共享同一分析数据源。</p>
           </div>
           <div className="table-toolbar">
             <button
@@ -577,6 +676,21 @@ function App() {
             )}
           </div>
         </aside>
+
+        <section className="panel release-panel">
+          <div className="panel-heading">
+            <div>
+              <span className="eyebrow">Release</span>
+              <h2>演示验收清单</h2>
+            </div>
+            <p>用于发布前快速复核主流程与样例复现，不引入额外业务功能。</p>
+          </div>
+          <ol className="release-list">
+            <li>点击“加载 synthetic failing case”，确认表格出现违规高亮行。</li>
+            <li>切换“仅违规/仅通过”筛选，核对记录数和详情面板同步变化。</li>
+            <li>导入真实模板文件，确认可完成全链路解析且无前端错误。</li>
+          </ol>
+        </section>
       </main>
     </div>
   )
