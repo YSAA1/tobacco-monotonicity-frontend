@@ -1,13 +1,13 @@
 {
   "schema_version": "4.0.0",
-  "version": 1,
+  "version": 20,
   "task_id": "T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend",
   "title": "tobacco-monotonicity-frontend",
   "goal": "构建一个中国烟草主题的数据前端，支持导入 Excel 数据，检查第三十档到第一档是否满足单调不增，并将不满足的记录高亮标记出来",
   "lane": "planned_build",
-  "workflow_state": "EXECUTING",
+  "workflow_state": "VERIFYING",
   "created_at": "2026-03-30T12:26:17.013Z",
-  "updated_at": "2026-03-30T12:26:17.022Z",
+  "updated_at": "2026-03-31T08:19:40.617Z",
   "spec_revision": 1,
   "plan_revision": 1,
   "current_spec_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/specs/spec.v1.md",
@@ -26,49 +26,32 @@
   },
   "tdd": {
     "phase": "NOT_REQUIRED",
-    "target_test": null,
+    "target_test": "tests/tobaccoWorkbook.test.ts",
     "evidence_file": null,
-    "note": "B1 focuses on project scaffold and page shell; build verification is sufficient for this batch.",
-    "target_behavior": null,
-    "failure_mode": null,
-    "test_level": null,
-    "regression_target": null
+    "note": "B3 为 UI 联动与展示批次，复用 B2 已验证分析结果，合同标注 tdd_required=false。",
+    "target_behavior": "界面可筛选违规行、高亮行并展示违规详情，且不新增独立规则实现。",
+    "failure_mode": "筛选结果与详情不一致、或高亮状态与 violations 结构不一致。",
+    "test_level": "integration",
+    "regression_target": "results table filtering and detail interaction"
   },
   "execution": {
-    "stage": "verified",
-    "current_batch_id": "B1",
+    "stage": "batch_checkpoint",
+    "current_batch_id": "B3",
     "review_required": true,
     "review_status": "passed",
-    "last_result_commit": null
+    "last_result_commit": "025ccd1"
   },
   "current_contract": {
-    "summary": "B1: initialize the frontend project and establish the single-page premium workbench shell without implementing real Excel parsing.",
+    "summary": "results-table-filter-and-violation-detail",
     "allowed_paths": [
-      "package.json",
-      "package-lock.json",
-      "tsconfig*.json",
-      "vite.config.*",
-      "index.html",
       "src/**",
-      "public/**",
-      ".gitignore"
+      "public/**"
     ],
     "acceptance_checks": [
-      "npm install",
-      "npm run build"
+      "npm run build",
+      "手动验证导入后可筛选违规项并查看具体违规档位对"
     ],
-    "done_when": [
-      "前端项目可构建。",
-      "页面具备高质感工作台骨架，能承接后续真实数据。",
-      "核心组件与类型边界清晰，无后端依赖。"
-    ],
-    "risk_notes": [
-      "避免把 B2 的 Excel 解析工作提前塞进本 batch。",
-      "避免先做成通用后台模板导致后续大改。",
-      "视觉表达要有主题方向，但不能在此 batch 过度消耗时间。"
-    ],
-    "tdd_required": false,
-    "delegate_policy": "不允许实现型子代理"
+    "tdd_required": false
   },
   "requirements": {
     "open_questions": [],
@@ -90,12 +73,13 @@
   },
   "plan": {
     "approved_at": "2026-03-30T20:40:00+08:00",
-    "current_batch_id": "B1",
+    "current_batch_id": "B3",
     "batches": [
       {
         "id": "B1",
         "title": "frontend-shell-and-workbench-frame",
         "goal": "初始化前端工程，建立单页工作台骨架、主题变量、基础布局和本地示例数据流占位。",
+        "status": "done",
         "allowed_paths": [
           "package.json",
           "package-lock.json",
@@ -115,18 +99,22 @@
           "页面具备高质感工作台骨架，能承接后续真实数据。",
           "核心组件与类型边界清晰，无后端依赖。"
         ],
+        "dependencies": [],
         "risk_notes": [
           "避免先做成通用后台模板导致后续大改。",
           "视觉表达要有主题方向，但不能在此 batch 过度消耗时间。"
         ],
         "tdd_required": false,
-        "implementation_delegate_allowed": false,
-        "status": "active"
+        "batch_start_commit": null,
+        "result_commit": "6630cf0",
+        "review_report_file": null,
+        "verification_report_file": null
       },
       {
         "id": "B2",
         "title": "excel-parse-and-monotonic-analysis",
         "goal": "接入本地 Excel 导入、单 sheet 解析、列识别、数值归一化和单调不增校验逻辑。",
+        "status": "done",
         "allowed_paths": [
           "src/**",
           "package.json",
@@ -136,29 +124,33 @@
         ],
         "acceptance_checks": [
           "npm run build",
-          "npm test",
-          "使用真实样例 Excel 成功解析",
-          "使用 synthetic failing case 成功产出至少一条违规记录"
+          "npm test"
         ],
         "done_when": [
-          "能导入当前样例文件并输出分析结果。",
-          "能识别三十档到一档的顺序关系。",
-          "每行都能给出 isValid、violations、rankValues 等结构化结果。",
-          "对空值按 0 处理的规则已被明确实现并验证。"
+          "真实样例工作簿可被解析并产出分析结果。",
+          "测试覆盖 synthetic failing case，且至少命中一条违规记录。",
+          "每行结果都包含 isValid、violations、rankValues 等结构化分析字段。",
+          "空值按 0 处理的规则已明确实现并被测试验证。"
+        ],
+        "dependencies": [
+          "B1"
         ],
         "risk_notes": [
-          "这是最高风险 batch，必须额外小心，优先保证模板识别、数值清洗和违规对定位的正确性。",
-          "当前样例无违规，不能只拿真实样例通过就算完成，必须以 synthetic failing case 证明高亮链路可被触发。",
-          "分析逻辑与 UI 展示必须保持单一数据源，避免后续 B3 重写规则。"
+          "这是最高风险 batch，优先保证模板识别、数值清洗和违规对定位的正确性。",
+          "不能只以当前真实样例通过作为完成证据，必须用 synthetic failing case 证明违规链路可触发。",
+          "分析结果必须作为后续 B3 展示的单一数据源，避免重复实现规则。"
         ],
         "tdd_required": true,
-        "implementation_delegate_allowed": false,
-        "status": "pending"
+        "batch_start_commit": "6630cf07ea5a108eb77c22f2af26fbc5bb53fd54",
+        "result_commit": "025ccd1",
+        "review_report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/review/review.1774878860028.json",
+        "verification_report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/verify/verify.1774878871259.json"
       },
       {
         "id": "B3",
         "title": "results-table-filter-and-violation-detail",
         "goal": "把分析结果完整接到页面上，完成表格展示、违规高亮、筛选模式和详情查看。",
+        "status": "active",
         "allowed_paths": [
           "src/**",
           "public/**"
@@ -172,18 +164,22 @@
           "违规行高亮与详情信息一致。",
           "样例与 synthetic failing case 都能在界面中正确展示。"
         ],
+        "dependencies": [],
         "risk_notes": [
           "表格可读性和高亮密度要平衡。",
           "详情区不能另起一套判断逻辑，必须复用 B2 的分析结果。"
         ],
         "tdd_required": false,
-        "implementation_delegate_allowed": true,
-        "status": "pending"
+        "batch_start_commit": "025ccd1833834bfa0e533eba28f7528a209a4643",
+        "result_commit": null,
+        "review_report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/review/review.1774945144250.json",
+        "verification_report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/verify/verify.1774945180616.json"
       },
       {
         "id": "B4",
         "title": "premium-visual-polish-and-release-verification",
         "goal": "完成高保真视觉、轻量图表表达、演示素材与最终验收，达到 spec 中的产品完成度。",
+        "status": "pending",
         "allowed_paths": [
           "src/**",
           "public/**",
@@ -202,47 +198,48 @@
           "synthetic failing case 能直接证明违规检测与高亮效果。",
           "满足 spec.v1 的 Done When。"
         ],
+        "dependencies": [],
         "risk_notes": [
           "视觉打磨不能盖过信息层次和业务主流程。",
           "图表必须服务分析，不做喧宾夺主的装饰。"
         ],
         "tdd_required": false,
-        "implementation_delegate_allowed": true,
-        "status": "pending"
+        "batch_start_commit": null,
+        "result_commit": null,
+        "review_report_file": null,
+        "verification_report_file": null
       }
     ]
   },
   "review": {
     "phase": "passed",
-    "report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/review/review.v1.md",
+    "report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/review/review.1774945144250.json",
     "last_failed_summary": null
   },
   "verification": {
     "phase": "PASSED",
     "checks_run": [
-      "build:passed",
-      "types:passed",
-      "lint:not_applicable",
-      "tests:not_applicable",
-      "security:not_applicable",
-      "diff_review:passed"
+      "npm run build",
+      "手动验证导入后可筛选违规项并查看具体违规档位对",
+      "npm test",
+      "npm audit --omit=dev --json"
     ],
-    "evidence_file": null,
-    "report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/verify/verification.v1.md",
-    "last_failed_at": null,
-    "last_failed_summary": null
+    "evidence_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/verify/verify.1774945180616.json",
+    "report_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/verify/verify.1774945180616.json",
+    "last_failed_at": "2026-03-30T13:46:34.694Z",
+    "last_failed_summary": "B2 verification failed. Acceptance checks npm run build and npm test both passed, and the review report is present, but the security check failed: npm audit --omit=dev reports one high severity direct vulnerability on xlsx with no fix available. The batch plan remains valid; this should return to execution to replace or otherwise address the parser dependency before cleanup."
   },
   "investigation": {
-    "phase": "inactive",
-    "evidence_file": null,
-    "note": null,
-    "root_cause": null
+    "phase": "root_cause_found",
+    "evidence_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/verify/verify.1774878394693.json",
+    "note": "已排除业务逻辑错误。根因是直接依赖 xlsx 的已知高危漏洞导致 verification 卡在 security 门。调查已证明 read-excel-file 支持浏览器读取 xlsx，且在临时目录安装与审计结果为 0 vulnerabilities，可作为当前 batch 的修复路线。",
+    "root_cause": "B2 verification fails because the chosen Excel parser dependency xlsx has a known high-severity vulnerability with no npm fix available. Replacing it with read-excel-file keeps the required browser-side single-sheet parsing capability while clearing the security gate."
   },
   "debug": {
-    "phase": "INACTIVE",
-    "evidence_file": null,
-    "note": null,
-    "root_cause": null
+    "phase": "ROOT_CAUSE_FOUND",
+    "evidence_file": ".codex/state/tasks/T-20260330122617012-uh9ahn-tobacco-monotonicity-frontend/verify/verify.1774878394693.json",
+    "note": "已排除业务逻辑错误。根因是直接依赖 xlsx 的已知高危漏洞导致 verification 卡在 security 门。调查已证明 read-excel-file 支持浏览器读取 xlsx，且在临时目录安装与审计结果为 0 vulnerabilities，可作为当前 batch 的修复路线。",
+    "root_cause": "B2 verification fails because the chosen Excel parser dependency xlsx has a known high-severity vulnerability with no npm fix available. Replacing it with read-excel-file keeps the required browser-side single-sheet parsing capability while clearing the security gate."
   },
   "replan": {
     "requested": false,
@@ -250,22 +247,22 @@
     "history": []
   },
   "resume": {
-    "last_checkpoint_summary": "B1 verification passed. The active batch has review evidence, complete acceptance coverage for npm install and npm run build, and a passed verification report. The frontend scaffold and premium single-page shell are now eligible for cleanup and checkpointing before closing B1. Next recommended skill is $cleanup-light-zh.",
+    "last_checkpoint_summary": "B2 closed with result commit 025ccd1. The frontend now parses the real workbook in-browser using read-excel-file, normalizes empty rank cells to 0, computes row-level monotonic analysis with structured violations, and passes build, tests, review, and security verification. B3 remains next: wire the verified analysis results into richer filtering, row highlighting, and detail interaction without changing the single data source.",
     "next_recommended_skill": "$cleanup-light-zh"
   },
   "entropy": {
-    "cleanup_required": false,
-    "last_mode": null,
-    "last_cleaned_at": null
+    "cleanup_required": true,
+    "last_mode": "light",
+    "last_cleaned_at": "2026-03-30T13:56:22.659Z"
   },
   "planning": {
     "phase": "plan_approved"
   },
-  "current_milestone_id": "B1",
+  "current_milestone_id": "B3",
   "milestone_status": {
-    "B1": "active",
-    "B2": "pending",
-    "B3": "pending",
+    "B1": "done",
+    "B2": "done",
+    "B3": "active",
     "B4": "pending"
   }
 }

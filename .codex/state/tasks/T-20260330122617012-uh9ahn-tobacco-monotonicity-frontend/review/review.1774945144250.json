@@ -1,0 +1,19 @@
+{
+  "at": "2026-03-31T08:19:04.250Z",
+  "phase": "passed",
+  "batch_id": "B3",
+  "summary": "B3 review passed. 结果筛选、违规高亮与详情联动均复用 B2 的 rows/violations 数据结构，未引入第二套规则逻辑。业务改动限定在 src/App.tsx 与 src/styles.css；其余变更为 harness 状态落盘。",
+  "risks": [
+    {
+      "severity": "note",
+      "file": "src/App.tsx",
+      "line": 503,
+      "summary": "表格行使用 onClick 交互，当前未补键盘选中快捷键；在当前批次范围内可接受，但后续可补可访问性增强。"
+    }
+  ],
+  "scope_checks": [
+    "git diff --name-only 显示业务代码改动仅在 src/App.tsx 与 src/styles.css，符合 allowed_paths=src/**。",
+    "check-boundary.mjs 仅对 harness 状态文件 control.json 触发误报，不涉及业务实现越界。",
+    "未提前实现 B4 的视觉打磨或发布材料逻辑。"
+  ]
+}

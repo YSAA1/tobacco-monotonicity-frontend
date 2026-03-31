@@ -528,6 +528,29 @@ tbody tr:nth-child(even) {
   background: rgba(255, 255, 255, 0.02);
 }
 
+tbody tr {
+  transition: background 160ms ease, box-shadow 160ms ease;
+  cursor: pointer;
+}
+
+tbody tr:hover {
+  background: rgba(220, 181, 109, 0.08);
+}
+
+.table-row-invalid {
+  background: rgba(158, 63, 49, 0.14);
+}
+
+.table-row-selected {
+  box-shadow: inset 0 0 0 1px rgba(220, 181, 109, 0.5);
+  background: rgba(220, 181, 109, 0.12);
+}
+
+.table-empty td {
+  color: var(--text-muted);
+  text-align: center;
+}
+
 .detail-card {
   padding: 22px;
 }
@@ -546,6 +569,27 @@ tbody tr:nth-child(even) {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.03);
   color: var(--text-muted);
+}
+
+.violation-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 16px 0 0;
+  list-style: none;
+}
+
+.violation-list li {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(210, 88, 63, 0.3);
+  color: #ffd4c3;
+  background: rgba(158, 63, 49, 0.22);
+}
+
+.detail-safe {
+  margin: 16px 0 0;
+  color: #cbdfb2;
 }
 
 .detail-placeholder {

@@ -1,8 +1,10 @@
 import type { ChangeEvent, CSSProperties, DragEvent } from 'react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import {
+  analyzeSheetRows,
   parseWorkbookFile,
+  RANK_HEADERS,
   type TobaccoAnalysisRow,
   type TobaccoWorkbookAnalysis,
 } from './lib/tobaccoWorkbook'
@@ -23,6 +25,8 @@ type QueueItem = {
   title: string
   detail: string
 }
+
+type FilterMode = 'all' | 'invalid' | 'valid'
 
 const previewColumns = ['商品编码', '商品名称', '批发价', '状态', '违规对', '三十档', '一档']
 
@@ -52,12 +56,89 @@ function describeViolations(row: TobaccoAnalysisRow): string {
     .join('；')
 }
 
+function rowKey(row: TobaccoAnalysisRow): string {
+  return `${row.productCode}-${row.rowNumber}`
+}
+
+function buildSyntheticFailingAnalysis(): TobaccoWorkbookAnalysis {
+  const baseHeader = [
+    '商品编码',
+    '商品名称',
+    '批发价',
+    '投放方式',
+    '合计（最终投放量）',
+    '合计(档位）',
+    ...RANK_HEADERS,
+  ]
+
+  const syntheticMatrix: unknown[][] = [
+    baseHeader,
+    [
+      'S001',
+      '合成违规样例',
+      '260',
+      '按档位投放',
+      '120',
+      '12',
+      10,
+      4,
+      7,
+      ...Array.from({ length: RANK_HEADERS.length - 3 }, () => 0),
+    ],
+    [
+      'S002',
+      '合成正常样例',
+      '180',
+      '按档位投放',
+      '80',
+      '8',
+      6,
+      5,
+      4,
+      ...Array.from({ length: RANK_HEADERS.length - 3 }, () => 0),
+    ],
+  ]
+
+  return analyzeSheetRows(syntheticMatrix, 'synthetic-failing-case.xlsx', 'SyntheticCase')
+}
+
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [analysis, setAnalysis] = useState<TobaccoWorkbookAnalysis | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [sourceFileName, setSourceFileName] = useState('')
+  const [filterMode, setFilterMode] = useState<FilterMode>('all')
+  const [selectedRowKey, setSelectedRowKey] = useState<string | null>(null)
+
+  const allRows = analysis?.rows ?? []
+  const filteredRows = allRows.filter((row) => {
+    if (filterMode === 'invalid') {
+      return !row.isValid
+    }
+    if (filterMode === 'valid') {
+      return row.isValid
+    }
+    return true
+  })
+
+  useEffect(() => {
+    if (filteredRows.length === 0) {
+      if (selectedRowKey !== null) {
+        setSelectedRowKey(null)
+      }
+      return
+    }
+
+    const hasSelected = selectedRowKey
+      ? filteredRows.some((row) => rowKey(row) === selectedRowKey)
+      : false
+
+    if (!hasSelected) {
+      const fallback = filteredRows.find((row) => !row.isValid) ?? filteredRows[0]
+      setSelectedRowKey(rowKey(fallback))
+    }
+  }, [filteredRows, selectedRowKey])
 
   const summaryCards: SummaryCard[] = analysis
     ? [
@@ -72,7 +153,7 @@ function App() {
           hint:
             analysis.summary.invalidRowCount === 0
               ? '当前真实样例全部满足单调不增。'
-              : '已识别出至少一行不满足相邻档位单调关系。',
+              : `已识别出 ${analysis.summary.invalidRowCount} 行不满足相邻档位单调关系。`,
         },
         {
           label: '违规档位对',
@@ -82,7 +163,7 @@ function App() {
         {
           label: '数据源',
           value: analysis.sourceName,
-          hint: '浏览器本地解析，无后端参与。',
+          hint: `当前筛选：${filterMode === 'all' ? '全部记录' : filterMode === 'invalid' ? '仅违规' : '仅通过'}。`,
         },
       ]
     : [
@@ -119,7 +200,7 @@ function App() {
       name: '结果数据源',
       status: analysis ? '已产出' : '骨架就绪',
       detail: analysis
-        ? '当前页面已持有统一的 rows / violations / rankValues 结构，可供 B3 直接复用。'
+        ? '筛选、高亮与详情均复用 rows / violations / rankValues，不新增第二套规则。'
         : 'B3 再接筛选、联动与完整高亮表现。',
     },
   ]
@@ -134,13 +215,16 @@ function App() {
         { title: '空值策略', detail: '档位空值按 0 处理，再参与单调不增判断。' },
       ]
     : [
-        { title: '模板要求', detail: '单 sheet、6 个元数据列、30 个档位列。' },
-        { title: '空值策略', detail: 'B2 会把档位空值按 0 归一化后再分析。' },
-        { title: '当前边界', detail: '只做上传、解析和结构化分析，不提前实现 B3 交互。' },
-      ]
+      { title: '模板要求', detail: '单 sheet、6 个元数据列、30 个档位列。' },
+      { title: '空值策略', detail: 'B2 会把档位空值按 0 归一化后再分析。' },
+      { title: '当前边界', detail: 'B3 在同一分析数据源上补筛选、高亮和详情交互。' },
+    ]
 
-  const previewRows = analysis?.rows.slice(0, 8) ?? []
-  const focusRow = analysis?.rows.find((row) => !row.isValid) ?? analysis?.rows[0] ?? null
+  const selectedRow =
+    filteredRows.find((row) => rowKey(row) === selectedRowKey) ??
+    filteredRows.find((row) => !row.isValid) ??
+    filteredRows[0] ??
+    null
 
   async function handleFile(file: File | null): Promise<void> {
     if (!file) {
@@ -154,6 +238,7 @@ function App() {
     try {
       const nextAnalysis = await parseWorkbookFile(file)
       setAnalysis(nextAnalysis)
+      setFilterMode(nextAnalysis.summary.invalidRowCount > 0 ? 'invalid' : 'all')
     } catch (error) {
       setAnalysis(null)
       setErrorMessage(error instanceof Error ? error.message : '文件解析失败，请检查模板格式。')
@@ -178,6 +263,14 @@ function App() {
     fileInputRef.current?.click()
   }
 
+  function loadSyntheticCase(): void {
+    const syntheticAnalysis = buildSyntheticFailingAnalysis()
+    setAnalysis(syntheticAnalysis)
+    setErrorMessage(null)
+    setSourceFileName(syntheticAnalysis.sourceName)
+    setFilterMode('invalid')
+  }
+
   function scrollToRuleSection(): void {
     document.getElementById('rule-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -193,12 +286,15 @@ function App() {
           </div>
           <h1>档位单调性分析中枢</h1>
           <p className="hero-lead">
-            B2 已切入真实 Excel 解析与单调不增校验。当前页面负责上传、模板识别、空值归零和违规对产出，
-            B3 再补完整筛选、高亮和详情交互。
+            当前批次 B3：在 B2 已验证的数据结构上，完成违规筛选、行高亮和详情联动。导入真实模板后可直接定位违规记录，
+            也可一键加载 synthetic failing case 做演示回归。
           </p>
           <div className="hero-actions">
             <button type="button" className="primary-button" onClick={openFilePicker}>
               导入模板文件
+            </button>
+            <button type="button" className="secondary-button" onClick={loadSyntheticCase}>
+              加载 synthetic failing case
             </button>
             <button type="button" className="secondary-button" onClick={scrollToRuleSection}>
               查看规则说明
@@ -229,7 +325,7 @@ function App() {
             </li>
             <li>
               <span>当前批次</span>
-              <strong>B2 解析与分析</strong>
+              <strong>B3 结果交互</strong>
             </li>
           </ul>
         </aside>
@@ -261,7 +357,7 @@ function App() {
               <span className="eyebrow">Ingress</span>
               <h2>数据导入区</h2>
             </div>
-            <p>当前批次只接最小上传闭环，解析成功后立即生成统一分析结果。</p>
+            <p>导入成功后立即进入统一分析结果，供筛选区、表格和详情区同步联动。</p>
           </div>
           <div
             className={`dropzone ${errorMessage ? 'dropzone-error' : ''}`}
@@ -280,6 +376,9 @@ function App() {
             <div className="dropzone-actions">
               <button type="button" className="primary-button" onClick={openFilePicker}>
                 选择 Excel 文件
+              </button>
+              <button type="button" className="secondary-button" onClick={loadSyntheticCase}>
+                演示违规样例
               </button>
               <span className="dropzone-file">{sourceFileName || '尚未选择文件'}</span>
             </div>
@@ -330,7 +429,7 @@ function App() {
               <span className="eyebrow">Pipeline</span>
               <h2>执行进度区</h2>
             </div>
-            <p>这里只呈现 B2 的执行状态，不提前挪用 B3 的筛选和交互范围。</p>
+            <p>当前显示 B3 执行态：在不改规则引擎的前提下，完成结果筛选与交互联动闭环。</p>
           </div>
           <div className="stage-list">
             {stageRows.map((row) => (
@@ -351,15 +450,33 @@ function App() {
               <span className="eyebrow">Result Table</span>
               <h2>结构化结果预览</h2>
             </div>
-            <p>当前只展示 B2 必要的结果预览，完整筛选、高亮与选中联动留给 B3。</p>
+            <p>结果表支持按状态筛选、违规行高亮与选中联动，数据来源保持为 B2 的分析结构。</p>
           </div>
           <div className="table-toolbar">
-            <button type="button" className="toolbar-pill toolbar-pill-active">
-              结构化结果
+            <button
+              type="button"
+              className={`toolbar-pill ${filterMode === 'all' ? 'toolbar-pill-active' : ''}`}
+              onClick={() => setFilterMode('all')}
+            >
+              全部（{analysis ? analysis.summary.totalRows : 0}）
+            </button>
+            <button
+              type="button"
+              className={`toolbar-pill ${filterMode === 'invalid' ? 'toolbar-pill-active' : ''}`}
+              onClick={() => setFilterMode('invalid')}
+            >
+              仅违规（{analysis ? analysis.summary.invalidRowCount : 0}）
+            </button>
+            <button
+              type="button"
+              className={`toolbar-pill ${filterMode === 'valid' ? 'toolbar-pill-active' : ''}`}
+              onClick={() => setFilterMode('valid')}
+            >
+              仅通过（{analysis ? analysis.summary.validRowCount : 0}）
             </button>
             <span className="toolbar-hint">
               {analysis
-                ? `已解析 ${analysis.summary.totalRows} 条记录，展示前 ${previewRows.length} 条。`
+                ? `当前展示 ${filteredRows.length} 条记录，点击任意行可查看详细违规档位对。`
                 : '上传后展示解析结果预览。'}
             </span>
           </div>
@@ -373,9 +490,17 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {previewRows.length > 0
-                  ? previewRows.map((row) => (
-                      <tr key={`${row.productCode}-${row.rowNumber}`}>
+                {filteredRows.length > 0
+                  ? filteredRows.map((row) => {
+                      const key = rowKey(row)
+                      const selected = selectedRow ? rowKey(selectedRow) === key : false
+
+                      return (
+                        <tr
+                          key={key}
+                          className={`${!row.isValid ? 'table-row-invalid' : ''} ${selected ? 'table-row-selected' : ''}`}
+                          onClick={() => setSelectedRowKey(key)}
+                        >
                         <td>{row.productCode}</td>
                         <td>{row.productName}</td>
                         <td>{formatNumber(row.wholesalePrice)}</td>
@@ -389,26 +514,14 @@ function App() {
                         <td>{row.violations.length}</td>
                         <td>{formatNumber(row.rankValues.三十档)}</td>
                         <td>{formatNumber(row.rankValues.一档)}</td>
-                      </tr>
-                    ))
+                        </tr>
+                      )
+                    })
                   : [
-                      <tr key="placeholder-0">
-                        <td>待导入</td>
-                        <td>真实样例解析后显示</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                      </tr>,
-                      <tr key="placeholder-1">
-                        <td>待导入</td>
-                        <td>synthetic failing case 将在测试中验证</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
+                      <tr key="placeholder-0" className="table-empty">
+                        <td colSpan={7}>
+                          {analysis ? '当前筛选下无记录。请切换筛选模式。' : '待导入：真实样例解析后显示。'}
+                        </td>
                       </tr>,
                     ]}
               </tbody>
@@ -420,28 +533,41 @@ function App() {
           <div className="panel-heading">
             <div>
               <span className="eyebrow">Detail</span>
-              <h2>分析结果快照</h2>
+              <h2>违规详情联动</h2>
             </div>
-            <p>当前先展示 B2 产出的最小结果快照，不做 B3 的选中联动与详情抽屉交互。</p>
+            <p>详情面板与结果表保持单一数据源联动，点击行后即时展示违规对与元数据。</p>
           </div>
           <div className="detail-card">
-            {focusRow ? (
+            {selectedRow ? (
               <>
                 <strong>
-                  {focusRow.productName} / {focusRow.productCode}
+                  {selectedRow.productName} / {selectedRow.productCode}
                 </strong>
-                <p>{describeViolations(focusRow)}</p>
+                <p>{describeViolations(selectedRow)}</p>
                 <ul className="detail-list">
-                  <li>批发价：{formatNumber(focusRow.wholesalePrice)}</li>
-                  <li>投放方式：{focusRow.deliveryMode}</li>
-                  <li>合计投放量：{formatNumber(focusRow.totalAllocation)}</li>
-                  <li>档位合计：{formatNumber(focusRow.totalRankCount)}</li>
+                  <li>行号：{selectedRow.rowNumber}</li>
+                  <li>批发价：{formatNumber(selectedRow.wholesalePrice)}</li>
+                  <li>投放方式：{selectedRow.deliveryMode}</li>
+                  <li>合计投放量：{formatNumber(selectedRow.totalAllocation)}</li>
+                  <li>档位合计：{formatNumber(selectedRow.totalRankCount)}</li>
                 </ul>
+                {selectedRow.violations.length > 0 ? (
+                  <ul className="violation-list">
+                    {selectedRow.violations.map((violation) => (
+                      <li key={`${violation.higherRank}-${violation.lowerRank}`}>
+                        {violation.higherRank} {formatNumber(violation.higherValue)} {'<'} {violation.lowerRank}{' '}
+                        {formatNumber(violation.lowerValue)}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="detail-safe">当前记录无违规档位对。</p>
+                )}
               </>
             ) : (
               <>
                 <strong>等待导入后显示</strong>
-                <p>上传 Excel 后，此处会展示首条违规记录或首条有效记录的分析快照。</p>
+                <p>上传 Excel 或加载 synthetic failing case 后，点击表格行可查看详细分析。</p>
                 <div className="detail-placeholder">
                   <span>三十档</span>
                   <span className="detail-separator">→</span>
