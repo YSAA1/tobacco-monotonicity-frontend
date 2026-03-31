@@ -215,7 +215,7 @@ function App() {
       ]
     : [
         { label: '总记录数', value: '--', hint: '待导入真实 Excel 模板。' },
-        { label: '违规记录数', value: '--', hint: 'B2 将接入单调不增校验。' },
+        { label: '违规记录数', value: '--', hint: '导入后自动执行单调不增校验。' },
         { label: '违规档位对', value: '--', hint: '当前尚未产出结构化违规对。' },
         { label: '数据源', value: '本地上传', hint: '首版不依赖后端服务。' },
       ]
@@ -248,7 +248,7 @@ function App() {
       status: analysis ? '已产出' : '骨架就绪',
       detail: analysis
         ? '筛选、高亮与详情均复用 rows / violations / rankValues，不新增第二套规则。'
-        : 'B3 再接筛选、联动与完整高亮表现。',
+        : '导入后将启用筛选、联动与高亮展示。',
     },
   ]
 
@@ -263,8 +263,8 @@ function App() {
       ]
     : [
       { title: '模板要求', detail: '单 sheet、6 个元数据列、30 个档位列。' },
-      { title: '空值策略', detail: 'B2 会把档位空值按 0 归一化后再分析。' },
-      { title: '当前边界', detail: 'B3 在同一分析数据源上补筛选、高亮和详情交互。' },
+      { title: '空值策略', detail: '档位空值按 0 归一化后再分析。' },
+      { title: '当前能力', detail: '使用同一分析数据源完成筛选、高亮和详情交互。' },
     ]
 
   const selectedRow =
@@ -333,15 +333,15 @@ function App() {
           </div>
           <h1>档位单调性分析中枢</h1>
           <p className="hero-lead">
-            当前批次 B4：进入发布前收口，强化视觉层次与演示表达。分析链路继续复用 B2/B3 的单一数据源，
-            支持实时筛选、高亮联动和 synthetic failing case 复现。
+            导入模板后可自动完成单调性分析，并通过筛选、行高亮和详情联动快速定位问题记录。
+            分析链路保持单一数据源，支持违规示例数据快速验证。
           </p>
           <div className="hero-actions">
             <button type="button" className="primary-button" onClick={openFilePicker}>
               导入模板文件
             </button>
             <button type="button" className="secondary-button" onClick={loadSyntheticCase}>
-              加载 synthetic failing case
+              加载违规示例数据
             </button>
             <button type="button" className="secondary-button" onClick={scrollToRuleSection}>
               查看规则说明
@@ -371,8 +371,8 @@ function App() {
               <strong>单表单模板</strong>
             </li>
             <li>
-              <span>当前批次</span>
-              <strong>B4 发布收口</strong>
+              <span>状态</span>
+              <strong>就绪</strong>
             </li>
           </ul>
         </aside>
@@ -385,7 +385,7 @@ function App() {
               <span className="eyebrow">Summary</span>
               <h2>检测摘要区</h2>
             </div>
-            <p>摘要卡与洞察条形图共同作为演示总览，所有值均来自同一分析结果对象。</p>
+            <p>摘要卡与洞察条形图共同展示关键结果，所有值均来自同一分析结果对象。</p>
           </div>
           <div className="summary-grid">
             {summaryCards.map((card) => (
@@ -477,7 +477,7 @@ function App() {
                 选择 Excel 文件
               </button>
               <button type="button" className="secondary-button" onClick={loadSyntheticCase}>
-                演示违规样例
+                加载违规示例
               </button>
               <span className="dropzone-file">{sourceFileName || '尚未选择文件'}</span>
             </div>
@@ -518,7 +518,7 @@ function App() {
           </div>
           <p className="rule-note">
             任意相邻两档只要出现前值小于后值，即记为违规。档位空值按 0 归一化后参与判断，真实样例与
-            synthetic failing case 都按同一条规则分析。
+            违规示例数据与真实模板都按同一条规则分析。
           </p>
         </section>
 
@@ -528,7 +528,7 @@ function App() {
               <span className="eyebrow">Pipeline</span>
               <h2>执行进度区</h2>
             </div>
-            <p>当前显示 B4 发布态：保持规则引擎不变，补足演示完整度与视觉一致性。</p>
+            <p>展示导入、分析、筛选、详情联动的完整流程状态。</p>
           </div>
           <div className="stage-list">
             {stageRows.map((row) => (
@@ -666,7 +666,7 @@ function App() {
             ) : (
               <>
                 <strong>等待导入后显示</strong>
-                <p>上传 Excel 或加载 synthetic failing case 后，点击表格行可查看详细分析。</p>
+                <p>上传 Excel 或加载违规示例数据后，点击表格行可查看详细分析。</p>
                 <div className="detail-placeholder">
                   <span>三十档</span>
                   <span className="detail-separator">→</span>
@@ -681,12 +681,12 @@ function App() {
           <div className="panel-heading">
             <div>
               <span className="eyebrow">Release</span>
-              <h2>演示验收清单</h2>
+              <h2>使用检查清单</h2>
             </div>
-            <p>用于发布前快速复核主流程与样例复现，不引入额外业务功能。</p>
+            <p>用于快速复核主流程与样例复现，不引入额外业务功能。</p>
           </div>
           <ol className="release-list">
-            <li>点击“加载 synthetic failing case”，确认表格出现违规高亮行。</li>
+            <li>点击“加载违规示例数据”，确认表格出现违规高亮行。</li>
             <li>切换“仅违规/仅通过”筛选，核对记录数和详情面板同步变化。</li>
             <li>导入真实模板文件，确认可完成全链路解析且无前端错误。</li>
           </ol>
